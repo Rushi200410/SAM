@@ -24,6 +24,7 @@ use Gate;
 
 use Illuminate\Http\RedirectResponse;
 
+use Carbon\Carbon;
 use Rats\Zkteco\Lib\ZKTeco;
 
 use Symfony\Component\HttpFoundation\Response;
@@ -138,62 +139,98 @@ class BiometricDeviceController extends Controller
 
         $device->connect();
 
-        $data = $device->getAttendance();
-        
-        foreach ($data as $key => $value) {
-            if( $value['type']==0){
-            if ($employee = Employee::whereId($value['id'])->first()) {
-                if (
-                    !Attendance::whereAttendance_date(date('Y-m-d', strtotime($value['timestamp'])))
-                        ->whereEmp_id($value['id'])
-                        ->whereType(0)
-                        ->first()
-                ) {
-                    $att_table = new Attendance();
-                    $att_table->uid = $value['uid'];
-                    $att_table->emp_id = $value['id'];
-                    $att_table->state = $value['state'];
-                    $att_table->attendance_time = date('H:i:s', strtotime($value['timestamp']));
-                    $att_table->attendance_date = date('Y-m-d', strtotime($value['timestamp']));
-                    $att_table->type = $value['type'];
+        $data = collect($device->getAttendance() ?: []);
+        $employeeIds = $data->pluck('id')->filter()->unique()->values();
 
-                    if (!($employee->schedules->first()->time_in >= $att_table->attendance_time)) {
-                        $att_table->status = 0;
-                        AttendanceController::lateTimeDevice($value['timestamp'],$employee);
-                    }
-                    $att_table->save();
-                }
-            }
-        }
-    
-        else{
-       
-            if ($employee = Employee::whereId($value['id'])->first()) {
-                if (
-                    !Leave::whereLeave_date(date('Y-m-d', strtotime($value['timestamp'])))
-                        ->whereEmp_id($value['id'])
-                        ->whereType(1)
-                        ->first()
-                ) {
-                    $lve_table = new Leave();
-                    $lve_table->uid = $value['uid'];
-                    $lve_table->emp_id = $value['id'];
-                    $lve_table->state = $value['state'];
-                    $lve_table->leave_time = date('H:i:s', strtotime($value['timestamp']));
-                    $lve_table->leave_date = date('Y-m-d', strtotime($value['timestamp']));
-                    $lve_table->type = $value['type'];
+        if ($employeeIds->isEmpty()) {
+            flash()->info('Info', 'No attendance records were found on the device.');
 
-                    if (!($employee->schedules->first()->time_out<=$lve_table->leave_time)) {
-                        $lve_table->status = 0;
-                        
-                    } 
-                    else {
-                        leaveController::overTimeDevice($value['timestamp'],$employee);
-                    }
-                    $lve_table->save();
-                }
-            }
+            return back();
         }
+
+        $employees = Employee::with('schedules')
+            ->whereIn('id', $employeeIds)
+            ->get()
+            ->keyBy('id');
+
+        $attendanceRows = $data->where('type', 0);
+        $attendanceDates = $attendanceRows->map(function ($value) {
+            return Carbon::parse($value['timestamp'])->toDateString();
+        })->unique()->values();
+        $existingAttendance = Attendance::whereIn('emp_id', $employeeIds)
+            ->whereType(0)
+            ->whereIn('attendance_date', $attendanceDates)
+            ->get()
+            ->keyBy(function ($attendance) {
+                return $attendance->emp_id.'|'.$attendance->attendance_date;
+            });
+
+        $leaveRows = $data->where('type', 1);
+        $leaveDates = $leaveRows->map(function ($value) {
+            return Carbon::parse($value['timestamp'])->toDateString();
+        })->unique()->values();
+        $existingLeave = Leave::whereIn('emp_id', $employeeIds)
+            ->whereType(1)
+            ->whereIn('leave_date', $leaveDates)
+            ->get()
+            ->keyBy(function ($leave) {
+                return $leave->emp_id.'|'.$leave->leave_date;
+            });
+
+        foreach ($data as $value) {
+            $employee = $employees->get((int) $value['id']);
+
+            if (!$employee || $employee->schedules->isEmpty()) {
+                continue;
+            }
+
+            $schedule = $employee->schedules->first();
+            $timestamp = Carbon::parse($value['timestamp']);
+            $date = $timestamp->toDateString();
+            $time = $timestamp->format('H:i:s');
+            $key = $employee->id.'|'.$date;
+
+            if ((int) $value['type'] === 0) {
+                if ($existingAttendance->has($key)) {
+                    continue;
+                }
+
+                $att_table = new Attendance();
+                $att_table->uid = $value['uid'];
+                $att_table->emp_id = $employee->id;
+                $att_table->state = $value['state'];
+                $att_table->attendance_time = $time;
+                $att_table->attendance_date = $date;
+                $att_table->type = $value['type'];
+
+                if ($time > $schedule->time_in) {
+                    $att_table->status = 0;
+                    AttendanceController::lateTimeDevice($value['timestamp'], $employee);
+                }
+
+                $att_table->save();
+                continue;
+            }
+
+            if ($existingLeave->has($key)) {
+                continue;
+            }
+
+            $lve_table = new Leave();
+            $lve_table->uid = $value['uid'];
+            $lve_table->emp_id = $employee->id;
+            $lve_table->state = $value['state'];
+            $lve_table->leave_time = $time;
+            $lve_table->leave_date = $date;
+            $lve_table->type = $value['type'];
+
+            if ($time < $schedule->time_out) {
+                $lve_table->status = 0;
+            } else {
+                LeaveController::overTimeDevice($value['timestamp'], $employee);
+            }
+
+            $lve_table->save();
         }
 
         

@@ -15,7 +15,10 @@ class EmployeeController extends Controller
     public function index()
     {
         
-        return view('admin.employee')->with(['employees'=> Employee::all(), 'schedules'=>Schedule::all()]);
+        return view('admin.employee')->with([
+            'employees'=> Employee::with('schedules')->latest()->get(),
+            'schedules'=> Schedule::orderBy('slug')->get(),
+        ]);
     }
 
     public function store(EmployeeRec $request)
@@ -31,9 +34,9 @@ class EmployeeController extends Controller
 
         if($request->schedule){
 
-            $schedule = Schedule::whereSlug($request->schedule)->first();
+            $schedule = Schedule::whereSlug($request->schedule)->firstOrFail();
 
-            $employee->schedules()->attach($schedule);
+            $employee->schedules()->sync([$schedule->id]);
         }
 
         // $role = Role::whereSlug('emp')->first();
@@ -58,11 +61,9 @@ class EmployeeController extends Controller
 
         if ($request->schedule) {
 
-            $employee->schedules()->detach();
+            $schedule = Schedule::whereSlug($request->schedule)->firstOrFail();
 
-            $schedule = Schedule::whereSlug($request->schedule)->first();
-
-            $employee->schedules()->attach($schedule);
+            $employee->schedules()->sync([$schedule->id]);
         }
 
         flash()->success('Success','Employee Record has been Updated successfully !');

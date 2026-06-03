@@ -16,32 +16,48 @@ class LeaveController extends Controller
 {
     public function index()
     {
-        return view('admin.leave')->with(['leaves' => Leave::all()]);
+        return view('admin.leave')->with([
+            'leaves' => Leave::with('employee.schedules')->latest('leave_date')->latest('leave_time')->get(),
+        ]);
     }
 
     public function indexOvertime()
     {
-        return view('admin.overtime')->with(['overtimes' => Overtime::all()]);
+        return view('admin.overtime')->with([
+            'overtimes' => Overtime::with('employee.schedules')->latest('overtime_date')->latest('created_at')->get(),
+        ]);
     }
 
 
-    // public static function overTime(Employee $employee)
-    // {
-    //     $current_t = new DateTime(date('H:i:s'));
-    //     $start_t = new DateTime($employee->schedules->first()->time_out);
-    //     $difference = $start_t->diff($current_t)->format('%H:%I:%S');
+    public static function overTime(Employee $employee)
+    {
+        $schedule = $employee->schedules->first();
 
-    //     $overtime = new Overtime();
-    //     $overtime->emp_id = $employee->id;
-    //     $overtime->duration = $difference;
-    //     $overtime->overtime_date = date('Y-m-d');
-    //     $overtime->save();
-    // }
+        if (!$schedule) {
+            return;
+        }
+
+        $current_t = new DateTime(date('H:i:s'));
+        $end_t = new DateTime($schedule->time_out);
+        $difference = $end_t->diff($current_t)->format('%H:%I:%S');
+
+        $overtime = new Overtime();
+        $overtime->emp_id = $employee->id;
+        $overtime->duration = $difference;
+        $overtime->overtime_date = date('Y-m-d');
+        $overtime->save();
+    }
+
     public static function overTimeDevice($att_dateTime, Employee $employee)
     {
-        
+            $schedule = $employee->schedules->first();
+
+            if (!$schedule) {
+                return;
+            }
+
             $attendance_time =new DateTime($att_dateTime);
-            $checkout = new DateTime($employee->schedules->first()->time_out);
+            $checkout = new DateTime($schedule->time_out);
             $difference = $checkout->diff($attendance_time)->format('%H:%I:%S');
 
             $overtime = new Overtime();

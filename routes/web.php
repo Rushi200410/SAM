@@ -3,7 +3,7 @@
 
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FingerDevicesControlller;
+use App\Jobs\GetAttendanceJob;
 
 Route::get('/', function () {
     return view('welcome');
@@ -13,7 +13,6 @@ Route::get('attended-before/{user_id}', '\App\Http\Controllers\AttendanceControl
 Auth::routes(['register' => false, 'reset' => false]);
 
 Route::group(['middleware' => ['auth', 'Role'], 'roles' => ['admin']], function () {
-    Route::resource('/employees', '\App\Http\Controllers\EmployeeController');
     Route::resource('/employees', '\App\Http\Controllers\EmployeeController');
     Route::get('/attendance', '\App\Http\Controllers\AttendanceController@index')->name('attendance');
   
@@ -39,8 +38,8 @@ Route::group(['middleware' => ['auth', 'Role'], 'roles' => ['admin']], function 
     Route::get('finger_device/clear/attendance', function () {
         $midnight = \Carbon\Carbon::createFromTime(23, 50, 00);
         $diff = now()->diffInMinutes($midnight);
-        dispatch(new ClearAttendanceJob())->delay(now()->addMinutes($diff));
-        toast("Attendance Clearance Queue will run in 11:50 P.M}!", "success");
+        dispatch(new GetAttendanceJob())->delay(now()->addMinutes($diff));
+        toast("Attendance queue job has been scheduled.", "success");
 
         return back();
     })->name('finger_device.clear.attendance');

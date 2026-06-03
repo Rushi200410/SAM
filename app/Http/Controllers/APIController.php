@@ -18,22 +18,22 @@ class ApiController extends Controller
     public function check(AttendanceEmp $request)
     {
         $request->validated();
+        $email = $request->input('email');
 
-        if ($employee = Employee::whereEmail(request('email'))->first()) {
+        if ($employee = Employee::with('schedules')->whereEmail($email)->first()) {
+            $schedule = $employee->schedules->first();
 
             if (Hash::check($request->pin_code, $employee->pin_code)) {
+                $latestCheck = Check::whereEmp_id($employee->id)->latest()->first();
 
-
-
-
-                if(null == Check::whereEmp_id($employee->id)->latest()->first()){
+                if (null === $latestCheck) {
                     ApiController::newAttandance($employee);
                 }else{
-                    
-                    if(Check::whereEmp_id($employee->id)->latest()->first()->leave_time !== null){
+
+                    if($latestCheck->leave_time !== null){
                         ApiController::newAttandance($employee);
                     } else {
-                        $check = Check::whereEmp_id($employee->id)->latest()->first();
+                        $check = $latestCheck;
                         $check->leave_time = date("Y-m-d H:i:s");
                         $check->save();
                         return response()->json(['success' => 'Successful in assign the leave'], 200);
@@ -62,17 +62,19 @@ class ApiController extends Controller
     public function attendance(AttendanceEmp $request)
     {
          $request->validated();
+        $today = date("Y-m-d");
 
-        if ($employee = Employee::whereEmail(request('email'))->first()) {
+        if ($employee = Employee::with('schedules')->whereEmail($request->input('email'))->first()) {
+            $schedule = $employee->schedules->first();
 
             if (Hash::check($request->pin_code, $employee->pin_code)) {
-                if (!Attendance::whereAttendance_date(date("Y-m-d"))->whereEmp_id($employee->id)->first()) {
+                if (!Attendance::whereAttendance_date($today)->whereEmp_id($employee->id)->exists()) {
                     $attendance = new Attendance;
                     $attendance->emp_id = $employee->id;
                     $attendance->attendance_time = date("H:i:s");
-                    $attendance->attendance_date = date("Y-m-d");
+                    $attendance->attendance_date = $today;
 
-                    if (!($employee->schedules->first()->time_in >= $attendance->attendance_time)) {
+                    if ($schedule && $schedule->time_in < $attendance->attendance_time) {
                         $attendance->status = 0;
                         AttendanceController::lateTime($employee);
                     };
@@ -94,18 +96,20 @@ class ApiController extends Controller
     public function leave(AttendanceEmp $request)
     {
         $request->validated();
+        $today = date("Y-m-d");
 
-        if ($employee = Employee::whereEmail(request('email'))->first()) {
+        if ($employee = Employee::with('schedules')->whereEmail($request->input('email'))->first()) {
+            $schedule = $employee->schedules->first();
 
             if (Hash::check($request->pin_code, $employee->pin_code)) {
-                if (!Leave::whereLeave_date(date("Y-m-d"))->whereEmp_id($employee->id)->first()) {
+                if (!Leave::whereLeave_date($today)->whereEmp_id($employee->id)->exists()) {
                     $leave = new Leave;
                     $leave->emp_id = $employee->id;
                     $leave->leave_time = date("H:i:s");
-                    $leave->leave_date = date("Y-m-d");
+                    $leave->leave_date = $today;
                     // ontime + overtime if true , else "early go" ....
-                    if ($leave->leave_time >= $employee->schedules->first()->time_out) {
-                        leaveController::overTime($employee);
+                    if ($schedule && $leave->leave_time >= $schedule->time_out) {
+                        LeaveController::overTime($employee);
                     } else {
                         $leave->status = 0;
                     }

@@ -45,6 +45,9 @@
                                                     </thead>
                                                     <tbody>
                                                         @foreach( $employees as $employee)
+                                                        @php
+                                                            $schedule = $employee->schedules->first();
+                                                        @endphp
 
                                                         <tr>
                                                             <td>{{$employee->id}}</td>
@@ -52,8 +55,8 @@
                                                             <td>{{$employee->position}}</td>
                                                             <td>{{$employee->email}}</td>
                                                             <td>
-                                                                @if(isset($employee->schedules->first()->slug))
-                                                                {{$employee->schedules->first()->slug}}
+                                                                @if(isset($schedule->slug))
+                                                                {{$schedule->slug}}
                                                                 @endif
                                                             </td>
                                                             <td>{{$employee->created_at}}</td>

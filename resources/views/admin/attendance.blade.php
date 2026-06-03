@@ -54,6 +54,9 @@
                                             <td>{{ $attendance->attendance_date }}</td>
                                             <td>{{ $attendance->emp_id }}</td>
                                             <td>{{ $attendance->employee->name }}</td>
+                                            @php
+                                                $schedule = $attendance->employee->schedules->first();
+                                            @endphp
                                             <td>{{ $attendance->attendance_time }}
                                                 @if ($attendance->status == 1)
                                                     <span class="badge badge-success badge-pill float-right">On Time</span>
@@ -62,8 +65,8 @@
                                                 @endif
                                             </td>
 
-                                            <td>{{ $attendance->employee->schedules->first()->time_in }} </td>
-                                            <td>{{ $attendance->employee->schedules->first()->time_out }}</td>
+                                            <td>{{ optional($schedule)->time_in }} </td>
+                                            <td>{{ optional($schedule)->time_out }}</td>
                                         </tr>
 
                                     @endforeach
