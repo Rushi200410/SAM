@@ -3,11 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Role;
-use Hash;
-use Spatie\Permission\Traits\HasRoles;
-use DB;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -17,15 +13,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $user= User::create([
-            'name' => 'Admin',
-            'email' => 'admin@mail.com',
-            'password' => Hash::make('svkm1234'),
-        ]);
-        $role = Role::create([
-            'slug' => 'admin',
-            'name' => 'Adminstrator',
-        ]);
-        $user->roles()->sync($role->id);
+        $this->call(DemoDataSeeder::class);
     }
 }
