@@ -96,7 +96,7 @@ class AttendanceController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Employee not found.',
+                'message' => 'Student not found.',
             ], 404);
         }
 

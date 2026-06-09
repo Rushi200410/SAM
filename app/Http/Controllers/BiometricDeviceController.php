@@ -128,7 +128,7 @@ class BiometricDeviceController extends Controller
         foreach ($employees as $employee) {
             $device->setUser($i++, $employee->id, $employee->name, '', '0', '0');
         }
-        flash()->success('Success', 'All Employees added to Biometric device successfully!');
+        flash()->success('Success', 'All Students added to Biometric device successfully!');
 
         return back();
     }

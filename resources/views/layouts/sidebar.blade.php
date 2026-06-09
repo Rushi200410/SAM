@@ -17,10 +17,10 @@
                             
 
                             <li>
-                            <a href="/employees" class="waves-effect {{ request()->is("employees") || request()->is("/employees/*") ? "mm active" : "" }}"><i class="ti-user"></i><span> Employees </span></a>
+                            <a href="/students" class="waves-effect {{ request()->is("students") || request()->is("/students/*") ? "mm active" : "" }}"><i class="ti-user"></i><span> Students </span></a>
                                 <!-- <ul class="submenu">
                                     <li>
-                                        <i class="dripicons-view-apps"></i><span>Employees List</span></a>
+                                        <i class="dripicons-view-apps"></i><span>Students List</span></a>
                                     </li>
                                    
                                 </ul> -->

@@ -17,7 +17,7 @@
                 <thead class="thead-dark">
                         <tr>
 
-                            <th>Employee</th>
+                            <th>Student</th>
                             <th>Position</th>
                             <!-- <th>ID</th> -->
 							<!-- Log on to codeastro.com for more projects! -->
@@ -106,6 +106,5 @@
         </div>
     </div>
 @endsection
-
 
 

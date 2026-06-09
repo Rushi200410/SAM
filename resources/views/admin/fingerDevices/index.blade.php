@@ -172,7 +172,7 @@
 
                                         <i class="fas fa-plus"></i>
 
-                                        Add Employee
+                                        Add Student
 
                                     </a>
                                     
@@ -373,4 +373,3 @@
     </script>
 
 @endsection
-

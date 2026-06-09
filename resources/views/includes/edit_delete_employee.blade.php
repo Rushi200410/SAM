@@ -3,7 +3,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-            <h5 class="modal-title"><b>Edit Employee Details</b></h5>
+            <h5 class="modal-title"><b>Edit Student Details</b></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span></button>
 
@@ -21,7 +21,7 @@
 
                     </div>
                     <div class="form-group">
-                        <label for="name" class="col-sm-3 control-label">Position</label>
+                        <label for="name" class="col-sm-3 control-label">Class / Section</label>
 
 
                         <input type="text" class="form-control" id="position" name="position" value="{{ $employee->position }}"
@@ -71,7 +71,7 @@
         <div class="modal-content">
             <div class="modal-header " style="align-items: center">
                
-              <h4 class="modal-title "><span class="employee_id">Delete Employee</span></h4>
+              <h4 class="modal-title "><span class="employee_id">Delete Student</span></h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div class="modal-body">
@@ -79,7 +79,7 @@
                     @csrf
                     {{ method_field('DELETE') }}
                     <div class="text-center">
-                        <h6>Are you sure you want to delete:</h6>
+                        <h6>Are you sure you want to delete this student:</h6>
                         <h2 class="bold del_employee_name">{{$employee->name}}</h2>
                     </div>
             </div>

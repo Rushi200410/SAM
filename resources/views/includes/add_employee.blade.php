@@ -5,7 +5,7 @@
 			<!-- Log on to codeastro.com for more projects! -->
         
             <div class="modal-header">
-            <h5 class="modal-title"><b>Add New Employee</b></h5>
+            <h5 class="modal-title"><b>Add New Student</b></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span></button>
 
@@ -21,12 +21,12 @@
                         @csrf
                         <div class="form-group">
                             <label for="name">Name <i>{without any space}</i></label>
-                            <input type="text" class="form-control" placeholder="Enter a Employee name [hyphen accepted]" id="name" name="name"
+                            <input type="text" class="form-control" placeholder="Enter a Student name [hyphen accepted]" id="name" name="name"
                                 required />
                         </div>
                         <div class="form-group">
-                            <label for="position">Position <i>{without any space}</i></label>
-                            <input type="text" class="form-control" placeholder="Enter Employee's Position [hyphen accepted]" id="position" name="position"
+                            <label for="position">Class / Section <i>{without any space}</i></label>
+                            <input type="text" class="form-control" placeholder="Enter Student's Class / Section [hyphen accepted]" id="position" name="position"
                                 required />
                         </div>
 

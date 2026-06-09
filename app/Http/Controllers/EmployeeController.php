@@ -43,9 +43,9 @@ class EmployeeController extends Controller
 
         // $employee->roles()->attach($role);
 
-        flash()->success('Success','Employee Record has been created successfully !');
+        flash()->success('Success','Student Record has been created successfully !');
 
-        return redirect()->route('employees.index')->with('success');
+        return redirect()->route('students.index')->with('success');
     }
 
  
@@ -66,16 +66,16 @@ class EmployeeController extends Controller
             $employee->schedules()->sync([$schedule->id]);
         }
 
-        flash()->success('Success','Employee Record has been Updated successfully !');
+        flash()->success('Success','Student Record has been Updated successfully !');
 
-        return redirect()->route('employees.index')->with('success');
+        return redirect()->route('students.index')->with('success');
     }
 
 
     public function destroy(Employee $employee)
     {
         $employee->delete();
-        flash()->success('Success','Employee Record has been Deleted successfully !');
-        return redirect()->route('employees.index')->with('success');
+        flash()->success('Success','Student Record has been Deleted successfully !');
+        return redirect()->route('students.index')->with('success');
     }
 }

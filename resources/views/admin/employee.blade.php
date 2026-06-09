@@ -5,17 +5,17 @@
 
 @section('breadcrumb')
 <div class="col-sm-6">
-    <h4 class="page-title text-left">Employees</h4>
+     <h4 class="page-title text-left">Students</h4>
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
-        <li class="breadcrumb-item"><a href="javascript:void(0);">Employees</a></li>
-        <li class="breadcrumb-item"><a href="javascript:void(0);">Employees List</a></li>
+        <li class="breadcrumb-item"><a href="javascript:void(0);">Students</a></li>
+        <li class="breadcrumb-item"><a href="javascript:void(0);">Students List</a></li>
   
     </ol>
 </div>
 @endsection
 @section('button')
-<a href="#addnew" data-toggle="modal" class="btn btn-success btn-sm btn-flat"><i class="mdi mdi-plus mr-2"></i>Add New Employee</a>
+<a href="#addnew" data-toggle="modal" class="btn btn-success btn-sm btn-flat"><i class="mdi mdi-plus mr-2"></i>Add New Student</a>
         
 
 @endsection
@@ -35,7 +35,7 @@
                                                     <tr>
                                                         <th data-priority="1">ID</th>
                                                         <th data-priority="2">Name</th>
-                                                        <th data-priority="3">Position</th>
+                                                        <th data-priority="3">Class / Section</th>
                                                         <th data-priority="4">Email</th>
                                                         <th data-priority="5">Schedule</th>
                                                         <th data-priority="6">Member Since</th>

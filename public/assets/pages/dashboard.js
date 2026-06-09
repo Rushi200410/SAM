@@ -1,49 +1,52 @@
 
-/*
- Template Name: Veltrix - Responsive Bootstrap 4 Admin Dashboard
- Author: Themesbrand
- File: Dashboard init js
- */
+(function () {
+    'use strict';
 
+    var data = window.dashboardData || {
+        weeklyLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        weeklyOntime: [0, 0, 0, 0, 0, 0, 0],
+        weeklyLate: [0, 0, 0, 0, 0, 0, 0],
+        todayOntime: 0,
+        todayLate: 0,
+        todayAbsent: 0
+    };
 
-//Line chart with area
+    if (document.querySelector('#weekly-attendance-chart')) {
+        new Chartist.Line('#weekly-attendance-chart', {
+            labels: data.weeklyLabels,
+            series: [
+                data.weeklyOntime,
+                data.weeklyLate
+            ]
+        }, {
+            low: 0,
+            showArea: true,
+            showPoint: true,
+            fullWidth: true,
+            chartPadding: { top: 10, right: 20, bottom: 0, left: 10 },
+            axisY: {
+                onlyInteger: true,
+                offset: 40
+            },
+            plugins: [
+                Chartist.plugins.tooltip()
+            ]
+        });
+    }
 
-new Chartist.Line('#chart-with-area', {
-    labels: [1, 2, 3, 4, 5, 6, 7, 8],
-    series: [
-        [5, 9, 7, 8, 5, 3, 5, 4]
-    ]
-    }, {
-    low: 0,
-    showArea: true,
-    plugins: [
-        Chartist.plugins.tooltip()
-    ]
-});
+    var breakdownTotal = data.todayOntime + data.todayLate + data.todayAbsent;
 
-
-//Animating a Donut with Svg.animate
-
-var chart = new Chartist.Pie('#ct-donut', {
-    series: [54, 28, 17,],
-    labels: [1, 2, 3]
-  }, {
-    donut: true,
-    showLabel: false,
-    plugins: [
-      Chartist.plugins.tooltip()
-    ]
-  });
-
-//donut
-$('.peity-donut').each(function () {
-    $(this).peity("donut", $(this).data());
-});
-
-// Peity line
-$('.peity-line').each(function() {
-    $(this).peity("line", $(this).data());
-});
-    
-  
-    
+    if (document.querySelector('#today-breakdown-chart') && breakdownTotal > 0) {
+        new Chartist.Pie('#today-breakdown-chart', {
+            series: [data.todayOntime, data.todayLate, data.todayAbsent],
+            labels: ['On Time', 'Late', 'Absent']
+        }, {
+            donut: true,
+            donutWidth: 40,
+            showLabel: false,
+            plugins: [
+                Chartist.plugins.tooltip()
+            ]
+        });
+    }
+})();

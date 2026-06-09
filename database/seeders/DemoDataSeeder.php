@@ -32,6 +32,7 @@ class DemoDataSeeder extends Seeder
             $this->seedAdminUser($adminRole);
 
             $schedules = $this->seedSchedules();
+            $this->normalizeExistingDemoEmployees();
             $employees = $this->seedEmployees($schedules);
 
             $this->assignSchedules($employees, $schedules);
@@ -106,24 +107,24 @@ class DemoDataSeeder extends Seeder
     {
         $faker = Faker::create('en_US');
         $positions = [
-            'Accountant',
-            'Admin Officer',
-            'Business Analyst',
-            'Cashier',
-            'Customer Support',
-            'Data Entry Operator',
-            'HR Executive',
-            'Junior Developer',
-            'Office Assistant',
-            'Operations Lead',
-            'Project Coordinator',
-            'Sales Executive',
+            'Class 8-A',
+            'Class 8-B',
+            'Class 9-A',
+            'Class 9-B',
+            'Class 10-A',
+            'Class 10-B',
+            'Class 11-Science',
+            'Class 11-Commerce',
+            'Class 12-Science',
+            'Class 12-Commerce',
+            'Diploma-CS-1',
+            'Diploma-CS-2',
         ];
 
         $employees = collect();
 
         for ($i = 1; $i <= self::EMPLOYEE_COUNT; ++$i) {
-            $email = sprintf('employee%03d@demo.test', $i);
+            $email = sprintf('student%03d@demo.test', $i);
             $name = sprintf('%s %s %03d', $faker->firstName, $faker->lastName, $i);
 
             $employee = Employee::where('email', $email)->first();
@@ -141,6 +142,34 @@ class DemoDataSeeder extends Seeder
         }
 
         return $employees;
+    }
+
+    private function normalizeExistingDemoEmployees(): void
+    {
+        $sections = [
+            'Class 8-A',
+            'Class 8-B',
+            'Class 9-A',
+            'Class 9-B',
+            'Class 10-A',
+            'Class 10-B',
+            'Class 11-Science',
+            'Class 11-Commerce',
+            'Class 12-Science',
+            'Class 12-Commerce',
+            'Diploma-CS-1',
+            'Diploma-CS-2',
+        ];
+
+        Employee::where('email', 'like', 'employee%@demo.test')
+            ->orderBy('id')
+            ->get()
+            ->values()
+            ->each(function (Employee $employee, int $index) use ($sections) {
+                $employee->email = sprintf('student%03d@demo.test', $index + 1);
+                $employee->position = $sections[$index % count($sections)];
+                $employee->save();
+            });
     }
 
     private function assignSchedules($employees, $schedules): void
@@ -210,85 +239,71 @@ class DemoDataSeeder extends Seeder
 
     private function upsertAttendance(Employee $employee, Carbon $date, string $attendanceTime, bool $isLate): void
     {
-        $record = Attendance::where('emp_id', $employee->id)
-            ->whereDate('attendance_date', $date->toDateString())
-            ->where('type', 0)
-            ->first();
-
-        if (!$record) {
-            $record = new Attendance();
-            $record->uid = 0;
-            $record->emp_id = $employee->id;
-            $record->state = 1;
-            $record->attendance_date = $date->toDateString();
-            $record->type = 0;
-        }
-
-        $record->attendance_time = $attendanceTime;
-        $record->status = $isLate ? 0 : 1;
-        $record->save();
+        Attendance::updateOrCreate(
+            [
+                'emp_id' => $employee->id,
+                'attendance_date' => $date->toDateString(),
+                'type' => 0,
+            ],
+            [
+                'uid' => 0,
+                'state' => 1,
+                'attendance_time' => $attendanceTime,
+                'status' => $isLate ? 0 : 1,
+            ]
+        );
     }
 
     private function upsertLatetime(Employee $employee, Carbon $date, string $scheduledTime, string $actualTime): void
     {
-        $record = Latetime::where('emp_id', $employee->id)
-            ->whereDate('latetime_date', $date->toDateString())
-            ->first();
-
-        if (!$record) {
-            $record = new Latetime();
-            $record->emp_id = $employee->id;
-            $record->latetime_date = $date->toDateString();
-        }
-
-        $record->duration = Carbon::createFromFormat('H:i:s', $scheduledTime)
-            ->diff(Carbon::createFromFormat('H:i:s', $actualTime))
-            ->format('%H:%I:%S');
-        $record->save();
+        Latetime::updateOrCreate(
+            [
+                'emp_id' => $employee->id,
+                'latetime_date' => $date->toDateString(),
+            ],
+            [
+                'duration' => Carbon::createFromFormat('H:i:s', $scheduledTime)
+                    ->diff(Carbon::createFromFormat('H:i:s', $actualTime))
+                    ->format('%H:%I:%S'),
+            ]
+        );
     }
 
     private function upsertOvertime(Employee $employee, Carbon $date, string $scheduledOut): void
     {
-        $record = Overtime::where('emp_id', $employee->id)
-            ->whereDate('overtime_date', $date->toDateString())
-            ->first();
-
-        if (!$record) {
-            $record = new Overtime();
-            $record->emp_id = $employee->id;
-            $record->overtime_date = $date->toDateString();
-        }
-
         $overtimeHours = random_int(1, 3);
         $overtimeMinutes = random_int(10, 45);
 
-        $record->duration = Carbon::createFromFormat('H:i:s', $scheduledOut)
-            ->addHours($overtimeHours)
-            ->addMinutes($overtimeMinutes)
-            ->diff(Carbon::createFromFormat('H:i:s', $scheduledOut))
-            ->format('%H:%I:%S');
-        $record->save();
+        Overtime::updateOrCreate(
+            [
+                'emp_id' => $employee->id,
+                'overtime_date' => $date->toDateString(),
+            ],
+            [
+                'duration' => Carbon::createFromFormat('H:i:s', $scheduledOut)
+                    ->addHours($overtimeHours)
+                    ->addMinutes($overtimeMinutes)
+                    ->diff(Carbon::createFromFormat('H:i:s', $scheduledOut))
+                    ->format('%H:%I:%S'),
+            ]
+        );
     }
 
     private function upsertLeave(Employee $employee, Carbon $date, Schedule $schedule): void
     {
-        $record = Leave::where('emp_id', $employee->id)
-            ->whereDate('leave_date', $date->toDateString())
-            ->where('type', 1)
-            ->first();
-
-        if (!$record) {
-            $record = new Leave();
-            $record->uid = 0;
-            $record->emp_id = $employee->id;
-            $record->state = 1;
-            $record->type = 1;
-            $record->leave_date = $date->toDateString();
-        }
-
-        $record->leave_time = $schedule->time_out;
-        $record->status = 1;
-        $record->save();
+        Leave::updateOrCreate(
+            [
+                'emp_id' => $employee->id,
+                'leave_date' => $date->toDateString(),
+                'type' => 1,
+            ],
+            [
+                'uid' => 0,
+                'state' => 1,
+                'leave_time' => $schedule->time_out,
+                'status' => 1,
+            ]
+        );
     }
 
     private function buildAttendanceTime(string $scheduledTime, bool $isLate): string
